@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-// FIX: Removed 'Defs', 'linearGradient', and 'Stop' from the import as they are not exported members of 'recharts'. They are used as standard SVG JSX tags.
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceDot, Area } from 'recharts';
 import type { DailyData, HealthRecord, StandardMedPattern } from '../types';
 import { TIME_SLOTS, getInitialRecords } from '../constants';
@@ -19,7 +18,9 @@ const formatDate = (date: Date): string => {
 };
 const parseDate = (dateStr: string): Date => {
   const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  // By setting the time to noon, we avoid issues where the date could shift
+  // to the previous day due to timezone differences at midnight.
+  return new Date(year, month - 1, day, 12);
 };
 
 // --- Calendar Component ---
@@ -96,7 +97,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg text-sm transition-all duration-200">
+            <div className="p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg text-sm transition-all duration-200">
                 <p className="font-bold text-gray-800 dark:text-gray-100 mb-2">{`Hora: ${label}`}</p>
                 <p className={`font-semibold ${data.value > 8 ? 'text-green-600 dark:text-green-400' : data.value > 3 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
                     {`Valor: ${data.value !== null ? data.value : 'N/A'}`}
@@ -242,22 +243,22 @@ const DailyLog: React.FC<DailyLogProps> = ({ allData, medicationList, standardMe
             <div className="w-full h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                         <defs>
+                        <defs>
                           <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} />
-                        <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-                        <YAxis domain={[0, 10]} allowDecimals={false} tick={{ fontSize: 12 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <ReferenceArea y1={0} y2={3} fill="#fee2e2" fillOpacity={0.4} label={{ value: 'Bajo', position: 'insideTopLeft', fill: '#b91c1c', fontSize: 12, dy: 10, dx: 10 }} />
-                        <ReferenceArea y1={3} y2={8} fill="#fef9c3" fillOpacity={0.4} label={{ value: 'Medio', position: 'insideTopLeft', fill: '#a16207', fontSize: 12, dy: 10, dx: 10 }} />
-                        <ReferenceArea y1={8} y2={10.5} fill="#f0fdf4" fillOpacity={0.4} label={{ value: 'Alto', position: 'insideTopLeft', fill: '#15803d', fontSize: 12, dy: 10, dx: 10 }} />
-                        <Area type="monotone" dataKey="value" stroke={false} fillOpacity={1} fill="url(#colorValue)" />
-                        {/* FIX: Changed boolean prop to string to satisfy faulty TypeScript definitions which expect a string instead of a boolean. */}
-                        <Line isAnimationActive type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={<CustomDot/>} activeDot={{ r: 8 }} connectNulls />
+                        <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.15} />
+                        <XAxis dataKey="time" tick={{ fontSize: 12, fill: 'currentColor', opacity: 0.7 }} axisLine={false} tickLine={false} />
+                        <YAxis domain={[0, 10]} allowDecimals={false} tick={{ fontSize: 12, fill: 'currentColor', opacity: 0.7 }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '3 3' }} />
+                        <ReferenceArea y1={0} y2={3} fill="#ef4444" fillOpacity={0.1} label={{ value: 'Bajo', position: 'insideTopLeft', fill: '#b91c1c', fontSize: 12, dy: 10, dx: 10, opacity: 0.8 }} />
+                        <ReferenceArea y1={3} y2={8} fill="#f59e0b" fillOpacity={0.08} label={{ value: 'Normal', position: 'insideTopLeft', fill: '#a16207', fontSize: 12, dy: 10, dx: 10, opacity: 0.8 }} />
+                        <ReferenceArea y1={8} y2={10.5} fill="#22c55e" fillOpacity={0.1} label={{ value: 'Alto', position: 'insideTopLeft', fill: '#15803d', fontSize: 12, dy: 10, dx: 10, opacity: 0.8 }} />
+                        {/* FIX: The 'stroke' prop expects a string, not a boolean. Changed from `false` to `"none"` to disable the stroke. */}
+                        <Area type="monotone" dataKey="value" stroke="none" fill="url(#colorValue)" />
+                        <Line isAnimationActive={false} type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{ r: 8, stroke: 'white', strokeWidth: 2, fill: '#3b82f6' }} connectNulls />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
