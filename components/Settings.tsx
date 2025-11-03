@@ -38,7 +38,7 @@ const Settings: React.FC<SettingsProps> = ({
 
   useEffect(() => {
     setTempPattern(appState.standardMedPattern);
-  }, [appState.standardMedPattern]);
+  }, [appState.standardMedPattern, activeTab]);
   
   // Medication List Handlers
   const handleAddMed = (e: React.FormEvent) => {
@@ -166,10 +166,10 @@ const Settings: React.FC<SettingsProps> = ({
     return (
       <button
         onClick={() => setActiveTab(tab)}
-        className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-200 ${
+        className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 ${
           isActive
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
         }`}
       >
         {children}
@@ -178,119 +178,120 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-       <div className="p-2 bg-gray-100 dark:bg-gray-900 rounded-lg flex space-x-2">
-            <TabButton tab="meds"><PillIcon /> Medicamentos</TabButton>
-            <TabButton tab="pattern"><ListIcon /> Patrón Estándar</TabButton>
-            <TabButton tab="data"><DatabaseIcon /> Gestión de Datos</TabButton>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg min-h-[400px]">
-            {activeTab === 'meds' && (
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Lista de Medicamentos</h3>
-                    <form onSubmit={handleAddMed} className="flex gap-2 mb-4">
-                        <input
-                            type="text"
-                            value={newMed}
-                            onChange={(e) => setNewMed(e.target.value)}
-                            placeholder="Añadir nuevo medicamento"
-                            className="flex-grow bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
-                            <PlusIcon /> Añadir
-                        </button>
-                    </form>
-                    <ul className="space-y-2 max-h-80 overflow-y-auto">
-                        {appState.medicationList.map(med => (
-                            <li key={med} className="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm">
-                                <span>{med}</span>
-                                <button onClick={() => handleDeleteMed(med)} className="text-red-500 hover:text-red-700"><TrashIcon /></button>
-                            </li>
-                        ))}
-                    </ul>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="flex space-x-4 px-6" aria-label="Settings Tabs">
+          <TabButton tab="meds"><PillIcon /> Medicamentos</TabButton>
+          <TabButton tab="pattern"><ListIcon /> Patrón Estándar</TabButton>
+          <TabButton tab="data"><DatabaseIcon /> Gestión de Datos</TabButton>
+        </nav>
+      </div>
+      <div className="p-6 min-h-[400px]">
+        {activeTab === 'meds' && (
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Lista de Medicamentos</h3>
+            <form onSubmit={handleAddMed} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newMed}
+                onChange={(e) => setNewMed(e.target.value)}
+                placeholder="Añadir nuevo medicamento"
+                className="flex-grow bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
+                <PlusIcon /> Añadir
+              </button>
+            </form>
+            <ul className="space-y-2 max-h-80 overflow-y-auto pr-2">
+              {appState.medicationList.map(med => (
+                <li key={med} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-md shadow-sm">
+                  <span>{med}</span>
+                  <button onClick={() => handleDeleteMed(med)} className="text-red-500 hover:text-red-700"><TrashIcon /></button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {activeTab === 'pattern' && (
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Patrón de Medicación Estándar</h3>
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-2">
+              {TIME_SLOTS.map(time => (
+                <div key={time} className="grid grid-cols-3 gap-4 items-center">
+                  <label className="font-medium text-right">{time}</label>
+                  <div className="col-span-2">
+                    <select
+                      multiple
+                      value={tempPattern[time] || []}
+                      onChange={e => handlePatternChange(time, e.target.selectedOptions)}
+                      className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-1 focus:ring-blue-500 focus:border-blue-500 h-20"
+                    >
+                      {appState.medicationList.map(med => <option key={med} value={med}>{med}</option>)}
+                    </select>
+                  </div>
                 </div>
-            )}
-            {activeTab === 'pattern' && (
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Patrón de Medicación Estándar</h3>
-                     <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-2">
-                        {TIME_SLOTS.map(time => (
-                            <div key={time} className="grid grid-cols-3 gap-4 items-center">
-                                <label className="font-medium text-right">{time}</label>
-                                <div className="col-span-2">
-                                    <select
-                                        multiple
-                                        value={tempPattern[time] || []}
-                                        onChange={e => handlePatternChange(time, e.target.selectedOptions)}
-                                        className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-1 focus:ring-blue-500 focus:border-blue-500 h-20"
-                                    >
-                                        {appState.medicationList.map(med => <option key={med} value={med}>{med}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-4 text-right">
-                        <button onClick={handleSavePattern} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 ml-auto">
-                            <SaveIcon /> Guardar Patrón
-                        </button>
-                    </div>
+              ))}
+            </div>
+            <div className="mt-4 text-right">
+              <button onClick={handleSavePattern} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1 ml-auto">
+                <SaveIcon /> Guardar Patrón
+              </button>
+            </div>
+          </div>
+        )}
+        {activeTab === 'data' && (
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Gestión de Datos</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 space-y-4">
+                <h4 className="font-semibold text-lg">Fichero Local</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Guarda o carga todos tus datos desde un archivo en tu dispositivo.</p>
+                <div className="flex flex-col gap-3">
+                  <button onClick={handleDownload} className="w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Descargar Datos (JSON)</button>
+                  <label className="w-full text-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors cursor-pointer">
+                    Cargar Datos (JSON)
+                    <input type="file" accept=".json" onChange={handleUpload} className="hidden" />
+                  </label>
                 </div>
-            )}
-            {activeTab === 'data' && (
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Gestión de Datos</h3>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <h4 className="font-semibold text-lg">Fichero Local</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Guarda o carga todos tus datos desde un archivo en tu dispositivo.</p>
-                            <div className="flex flex-col gap-3">
-                                <button onClick={handleDownload} className="w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Descargar Datos (JSON)</button>
-                                <label className="w-full text-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors cursor-pointer">
-                                Cargar Datos (JSON)
-                                <input type="file" accept=".json" onChange={handleUpload} className="hidden" />
-                                </label>
-                            </div>
-                        </div>
-                         <div className="space-y-4">
-                            <h4 className="font-semibold text-lg">Sincronización con JSONbin.io</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Sincroniza tus datos en la nube para acceder a ellos desde cualquier lugar.</p>
-                            {error && <p className="text-red-500 bg-red-100 dark:bg-red-900/50 p-2 rounded-md mb-2">{error}</p>}
-                            <div className="space-y-2">
-                                {appState.jsonBinCredentials.map(cred => (
-                                    <div key={cred.id} className="p-2 bg-white dark:bg-gray-800 rounded-md flex justify-between items-center shadow-sm">
-                                        <span className="font-medium">{cred.name}</span>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => handleJsonBinAction('load', cred)} disabled={loading} className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400">Cargar</button>
-                                            <button onClick={() => handleJsonBinAction('save', cred)} disabled={loading} className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400">Guardar</button>
-                                            <button onClick={() => handleDeleteCred(cred.id)} className="text-red-500 hover:text-red-700"><TrashIcon /></button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            {!showCredForm && (
-                                <button onClick={() => { setShowCredForm(true); setCurrentCred({}); }} className="mt-2 w-full text-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">Añadir Credenciales</button>
-                            )}
-                            {showCredForm && (
-                                <div className="mt-4 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50">
-                                    <h5 className="font-semibold mb-2">Nuevas Credenciales</h5>
-                                    <div className="space-y-2">
-                                        <input type="text" placeholder="Nombre (ej. Mi PC)" value={currentCred.name || ''} onChange={e => setCurrentCred(c => ({...c, name: e.target.value}))} className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"/>
-                                        <input type="password" placeholder="X-Master-Key" value={currentCred.apiKey || ''} onChange={e => setCurrentCred(c => ({...c, apiKey: e.target.value}))} className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"/>
-                                        <input type="text" placeholder="Bin ID" value={currentCred.binId || ''} onChange={e => setCurrentCred(c => ({...c, binId: e.target.value}))} className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"/>
-                                    </div>
-                                    <div className="flex gap-2 mt-2">
-                                        <button onClick={handleSaveCred} className="px-3 py-1 bg-blue-600 text-white rounded">Guardar</button>
-                                        <button onClick={() => setShowCredForm(false)} className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-black dark:text-white rounded">Cancelar</button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+              </div>
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 space-y-4">
+                <h4 className="font-semibold text-lg">Sincronización con JSONbin.io</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Sincroniza tus datos en la nube para acceder a ellos desde cualquier lugar.</p>
+                {error && <p className="text-red-500 bg-red-100 dark:bg-red-900/50 p-2 rounded-md mb-2">{error}</p>}
+                <div className="space-y-2">
+                  {appState.jsonBinCredentials.map(cred => (
+                    <div key={cred.id} className="p-2 bg-white dark:bg-gray-800 rounded-md flex justify-between items-center shadow-sm">
+                      <span className="font-medium">{cred.name}</span>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleJsonBinAction('load', cred)} disabled={loading} className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400">Cargar</button>
+                        <button onClick={() => handleJsonBinAction('save', cred)} disabled={loading} className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400">Guardar</button>
+                        <button onClick={() => handleDeleteCred(cred.id)} className="text-red-500 hover:text-red-700"><TrashIcon /></button>
+                      </div>
                     </div>
+                  ))}
                 </div>
-            )}
-        </div>
+                {!showCredForm && (
+                  <button onClick={() => { setShowCredForm(true); setCurrentCred({}); }} className="mt-2 w-full text-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">Añadir Credenciales</button>
+                )}
+                {showCredForm && (
+                  <div className="mt-4 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800/50">
+                    <h5 className="font-semibold mb-2">Nuevas Credenciales</h5>
+                    <div className="space-y-2">
+                      <input type="text" placeholder="Nombre (ej. Mi PC)" value={currentCred.name || ''} onChange={e => setCurrentCred(c => ({...c, name: e.target.value}))} className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"/>
+                      <input type="password" placeholder="X-Master-Key" value={currentCred.apiKey || ''} onChange={e => setCurrentCred(c => ({...c, apiKey: e.target.value}))} className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"/>
+                      <input type="text" placeholder="Bin ID" value={currentCred.binId || ''} onChange={e => setCurrentCred(c => ({...c, binId: e.target.value}))} className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"/>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={handleSaveCred} className="px-3 py-1 bg-blue-600 text-white rounded">Guardar</button>
+                      <button onClick={() => setShowCredForm(false)} className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-black dark:text-white rounded">Cancelar</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
