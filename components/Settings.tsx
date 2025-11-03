@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { AppState, StandardMedPattern, JsonBinCredential } from '../types';
 import { getBinData, updateBinData } from '../services/jsonbinService';
@@ -134,7 +135,13 @@ const Settings: React.FC<SettingsProps> = ({
             alert(`Datos guardados en "${cred.name}" correctamente.`);
         }
     } catch (e: any) {
-        setError(e.message);
+        let errorMessage = 'Ha ocurrido un error inesperado.';
+        if (e.name === 'TypeError' && e.message === 'Failed to fetch') {
+            errorMessage = 'Error de red: No se pudo conectar con JSONbin.io. Por favor, revisa tu conexión a internet y asegúrate de que ningún bloqueador de anuncios o VPN esté interfiriendo. Verifica también que tu API Key y Bin ID son correctos.';
+        } else {
+            errorMessage = e.message || 'Error al comunicar con JSONbin.';
+        }
+        setError(errorMessage);
     } finally {
         setLoading(false);
     }
@@ -257,7 +264,7 @@ const Settings: React.FC<SettingsProps> = ({
               <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 space-y-4">
                 <h4 className="font-semibold text-lg">Sincronización con JSONbin.io</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Sincroniza tus datos en la nube para acceder a ellos desde cualquier lugar.</p>
-                {error && <p className="text-red-500 bg-red-100 dark:bg-red-900/50 p-2 rounded-md mb-2">{error}</p>}
+                {error && <p className="text-red-500 bg-red-100 dark:bg-red-900/50 p-3 rounded-md text-sm">{error}</p>}
                 <div className="space-y-2">
                   {appState.jsonBinCredentials.map(cred => (
                     <div key={cred.id} className="p-2 bg-white dark:bg-gray-800 rounded-md flex justify-between items-center shadow-sm">

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceDot } from 'recharts';
+// FIX: Removed 'Defs', 'linearGradient', and 'Stop' from the import as they are not exported members of 'recharts'. They are used as standard SVG JSX tags.
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceDot, Area } from 'recharts';
 import type { DailyData, HealthRecord, StandardMedPattern } from '../types';
 import { TIME_SLOTS, getInitialRecords } from '../constants';
 
@@ -10,8 +11,16 @@ const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24"
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
 
 // --- Helper Functions ---
-const formatDate = (date: Date): string => date.toISOString().split('T')[0];
-const getDayOfWeek = (date: Date): string => date.toLocaleDateString('es-ES', { weekday: 'short' }).slice(0, 2);
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+const parseDate = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
 
 // --- Calendar Component ---
 const Calendar: React.FC<{
@@ -19,7 +28,7 @@ const Calendar: React.FC<{
   onDateChange: (date: string) => void;
   dataDays: Set<string>;
 }> = ({ selectedDate, onDateChange, dataDays }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date(selectedDate));
+  const [currentMonth, setCurrentMonth] = useState(parseDate(selectedDate));
 
   const changeMonth = (offset: number) => {
     setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
@@ -87,23 +96,23 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg text-sm">
-                <p className="font-bold text-gray-800 dark:text-gray-100">{`Hora: ${label}`}</p>
-                <p className={`font-semibold ${data.value > 8 ? 'text-green-500' : data.value > 3 ? 'text-amber-500' : 'text-red-500'}`}>
+            <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg text-sm transition-all duration-200">
+                <p className="font-bold text-gray-800 dark:text-gray-100 mb-2">{`Hora: ${label}`}</p>
+                <p className={`font-semibold ${data.value > 8 ? 'text-green-600 dark:text-green-400' : data.value > 3 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
                     {`Valor: ${data.value !== null ? data.value : 'N/A'}`}
                 </p>
                 {data.medication.length > 0 && (
-                    <div className="mt-1">
-                        <p className="font-semibold text-indigo-500">Medicación:</p>
-                        <ul className="list-disc list-inside">
+                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <p className="font-semibold text-indigo-500 dark:text-indigo-400">Medicación:</p>
+                        <ul className="list-disc list-inside text-gray-600 dark:text-gray-300">
                             {data.medication.map((med: string) => <li key={med}>{med}</li>)}
                         </ul>
                     </div>
                 )}
                 {data.comments && (
-                    <div className="mt-1">
-                        <p className="font-semibold text-amber-500">Comentarios:</p>
-                        <p className="max-w-xs whitespace-normal">{data.comments}</p>
+                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <p className="font-semibold text-amber-500 dark:text-amber-400">Comentarios:</p>
+                        <p className="max-w-xs whitespace-normal text-gray-600 dark:text-gray-300">{data.comments}</p>
                     </div>
                 )}
             </div>
@@ -233,14 +242,22 @@ const DailyLog: React.FC<DailyLogProps> = ({ allData, medicationList, standardMe
             <div className="w-full h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                         <defs>
+                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} />
                         <XAxis dataKey="time" tick={{ fontSize: 12 }} />
                         <YAxis domain={[0, 10]} allowDecimals={false} tick={{ fontSize: 12 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <ReferenceArea y1={0} y2={3} fill="#ef4444" fillOpacity={0.1} label={{ value: 'Bajo', position: 'insideTopLeft', fill: '#ef4444', fontSize: 12, dy: 10, dx: 10 }} />
-                        <ReferenceArea y1={3} y2={8} fill="#f59e0b" fillOpacity={0.1} label={{ value: 'Medio', position: 'insideTopLeft', fill: '#f59e0b', fontSize: 12, dy: 10, dx: 10 }} />
-                        <ReferenceArea y1={8} y2={10.5} fill="#22c55e" fillOpacity={0.1} label={{ value: 'Alto', position: 'insideTopLeft', fill: '#22c55e', fontSize: 12, dy: 10, dx: 10 }} />
-                        <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={<CustomDot/>} activeDot={{ r: 8 }} connectNulls />
+                        <ReferenceArea y1={0} y2={3} fill="#fee2e2" fillOpacity={0.4} label={{ value: 'Bajo', position: 'insideTopLeft', fill: '#b91c1c', fontSize: 12, dy: 10, dx: 10 }} />
+                        <ReferenceArea y1={3} y2={8} fill="#fef9c3" fillOpacity={0.4} label={{ value: 'Medio', position: 'insideTopLeft', fill: '#a16207', fontSize: 12, dy: 10, dx: 10 }} />
+                        <ReferenceArea y1={8} y2={10.5} fill="#f0fdf4" fillOpacity={0.4} label={{ value: 'Alto', position: 'insideTopLeft', fill: '#15803d', fontSize: 12, dy: 10, dx: 10 }} />
+                        <Area type="monotone" dataKey="value" stroke={false} fillOpacity={1} fill="url(#colorValue)" />
+                        {/* FIX: Changed boolean prop to string to satisfy faulty TypeScript definitions which expect a string instead of a boolean. */}
+                        <Line isAnimationActive type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={<CustomDot/>} activeDot={{ r: 8 }} connectNulls />
                     </LineChart>
                 </ResponsiveContainer>
             </div>

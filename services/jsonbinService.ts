@@ -7,6 +7,7 @@ export const getBinData = async (apiKey: string, binId: string): Promise<AppStat
   const response = await fetch(`${API_BASE_URL}/${binId}/latest`, {
     method: 'GET',
     headers: {
+      'Accept': 'application/json',
       'X-Master-Key': apiKey,
     },
   });
@@ -25,6 +26,7 @@ export const updateBinData = async (apiKey: string, binId: string, data: AppStat
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'X-Master-Key': apiKey,
     },
     body: JSON.stringify(data),
