@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceDot } from 'recharts';
 import type { DailyData, HealthRecord, StandardMedPattern } from '../types';
 import { TIME_SLOTS, getInitialRecords } from '../constants';
@@ -68,7 +67,7 @@ const Calendar: React.FC<{
             <button
               key={dateStr}
               onClick={() => onDateChange(dateStr)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200
+              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200 relative
                 ${isCurrentMonth ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'}
                 ${isSelected ? 'bg-blue-600 text-white font-bold' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}
               `}
@@ -144,6 +143,7 @@ const DailyLog: React.FC<DailyLogProps> = ({ allData, medicationList, standardMe
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [dailyRecords, setDailyRecords] = useState<HealthRecord[]>(getInitialRecords());
   const [showCalendar, setShowCalendar] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const dataDays = useMemo(() => new Set(Object.keys(allData)), [allData]);
   
@@ -152,6 +152,21 @@ const DailyLog: React.FC<DailyLogProps> = ({ allData, medicationList, standardMe
   useEffect(() => {
     setDailyRecords(selectedDayData?.records || getInitialRecords());
   }, [selectedDate, selectedDayData]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCalendar]);
+
 
   const handleRecordChange = (time: string, field: keyof HealthRecord, value: any) => {
     setDailyRecords(prev =>
@@ -189,16 +204,27 @@ const DailyLog: React.FC<DailyLogProps> = ({ allData, medicationList, standardMe
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             Registro del Día: <span className="text-blue-600 dark:text-blue-400">{selectedDate}</span>
           </h2>
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-          >
-            {showCalendar ? 'Ocultar' : 'Mostrar'} Calendario
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              {showCalendar ? 'Ocultar' : 'Mostrar'} Calendario
+            </button>
+            {showCalendar && (
+              <div ref={calendarRef} className="absolute top-full left-0 mt-2 z-20 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
+                <Calendar 
+                  selectedDate={selectedDate} 
+                  onDateChange={(date) => {
+                    setSelectedDate(date);
+                    setShowCalendar(false);
+                  }} 
+                  dataDays={dataDays} 
+                />
+              </div>
+            )}
+          </div>
         </div>
-        {showCalendar && (
-            <Calendar selectedDate={selectedDate} onDateChange={setSelectedDate} dataDays={dataDays} />
-        )}
       </div>
       
       {selectedDayData && chartData.length > 0 && (

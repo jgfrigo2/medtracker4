@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { AppState, StandardMedPattern, JsonBinCredential, HealthRecord } from '../types';
 import { getBinData, updateBinData } from '../services/jsonbinService';
@@ -137,7 +136,7 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const Section: React.FC<{ title: string, children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
+    <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
       <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-600">{title}</h3>
       {children}
     </div>
