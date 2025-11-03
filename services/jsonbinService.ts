@@ -27,6 +27,10 @@ export const updateBinData = async (apiKey: string, binId: string, data: AppStat
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'X-Master-Key': apiKey,
+      // FIX: Add 'X-Bin-Versioning': 'false' to prevent CORS preflight errors
+      // on PUT requests from the browser. JSONbin.io's versioning feature
+      // can cause issues with CORS.
+      'X-Bin-Versioning': 'false',
     },
     body: JSON.stringify(data),
   });
