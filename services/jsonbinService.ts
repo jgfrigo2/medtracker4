@@ -8,6 +8,10 @@ export const getBinData = async (apiKey: string, binId: string): Promise<AppStat
     headers: {
       'Accept': 'application/json',
       'X-Master-Key': apiKey,
+      // FIX: Add 'X-Bin-Versioning': 'false' to prevent CORS preflight errors
+      // on GET requests as well. The 'X-Master-Key' header makes this a
+      // non-simple request, triggering a preflight that can fail.
+      'X-Bin-Versioning': 'false',
     },
   });
 
