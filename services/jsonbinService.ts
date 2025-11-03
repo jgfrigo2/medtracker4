@@ -6,11 +6,7 @@ export const getBinData = async (apiKey: string, binId: string): Promise<AppStat
   const response = await fetch(`${API_BASE_URL}/${binId}/latest`, {
     method: 'GET',
     headers: {
-      'Accept': 'application/json',
       'X-Master-Key': apiKey,
-      // FIX: Add 'X-Bin-Versioning': 'false' to prevent CORS preflight errors
-      // on GET requests as well. The 'X-Master-Key' header makes this a
-      // non-simple request, triggering a preflight that can fail.
       'X-Bin-Versioning': 'false',
     },
   });
@@ -29,11 +25,7 @@ export const updateBinData = async (apiKey: string, binId: string, data: AppStat
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
       'X-Master-Key': apiKey,
-      // FIX: Add 'X-Bin-Versioning': 'false' to prevent CORS preflight errors
-      // on PUT requests from the browser. JSONbin.io's versioning feature
-      // can cause issues with CORS.
       'X-Bin-Versioning': 'false',
     },
     body: JSON.stringify(data),
